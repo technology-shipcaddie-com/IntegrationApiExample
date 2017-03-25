@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/ShipCaddieAPIInterface" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/ShipCaddieAPIInterface" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import schemaLocation="https://testshipcaddieapi.azurewebsites.net/ShipcaddieAPI.svc?xsd=xsd3" namespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+  <xs:complexType name="ShipmentModelIntegration">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="addressFrom" nillable="true" type="tns:Addressfrom" />
+      <xs:element minOccurs="0" name="addressTo" nillable="true" type="tns:Addressto" />
+      <xs:element minOccurs="0" name="carriers" nillable="true" type="tns:ArrayOfCarrier" />
+      <xs:element minOccurs="0" name="dateShipped" type="xs:dateTime" />
+      <xs:element minOccurs="0" name="packages" nillable="true" type="tns:ArrayOfPackage" />
+      <xs:element minOccurs="0" name="printFormat" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="shipmentId" type="xs:int" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ShipmentModelIntegration" nillable="true" type="tns:ShipmentModelIntegration" />
+  <xs:complexType name="Addressfrom">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="address1" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="address2" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="attentionOf" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="city" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="companyName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="countryCode" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="email" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="isResidential" type="xs:boolean" />
+      <xs:element minOccurs="0" name="phoneNumber" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="state" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="systemCountryId" type="xs:int" />
+      <xs:element minOccurs="0" name="zipCode" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Addressfrom" nillable="true" type="tns:Addressfrom" />
+  <xs:complexType name="Addressto">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="address1" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="address2" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="attentionOf" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="city" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="companyName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="countryCode" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="email" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="isResidential" type="xs:boolean" />
+      <xs:element minOccurs="0" name="phoneNumber" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="state" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="systemCountryId" type="xs:int" />
+      <xs:element minOccurs="0" name="zipCode" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Addressto" nillable="true" type="tns:Addressto" />
+  <xs:complexType name="ArrayOfCarrier">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Carrier" nillable="true" type="tns:Carrier" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfCarrier" nillable="true" type="tns:ArrayOfCarrier" />
+  <xs:complexType name="Carrier">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="carrierClientContractId" type="xs:int" />
+      <xs:element minOccurs="0" name="carrierId" type="xs:int" />
+      <xs:element minOccurs="0" name="carrierServiceLevelId" type="xs:int" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Carrier" nillable="true" type="tns:Carrier" />
+  <xs:complexType name="ArrayOfPackage">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Package" nillable="true" type="tns:Package" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfPackage" nillable="true" type="tns:ArrayOfPackage" />
+  <xs:complexType name="Package">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="accessorialCharges" nillable="true" type="tns:ArrayOfAccessorialcharge" />
+      <xs:element minOccurs="0" name="dimension" nillable="true" type="tns:Dimension" />
+      <xs:element minOccurs="0" name="items" nillable="true" type="tns:ArrayOfItem" />
+      <xs:element minOccurs="0" name="referenceField1" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="referenceField2" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="weightOunces" type="xs:float" />
+      <xs:element minOccurs="0" name="weightPounds" type="xs:float" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Package" nillable="true" type="tns:Package" />
+  <xs:complexType name="ArrayOfAccessorialcharge">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Accessorialcharge" nillable="true" type="tns:Accessorialcharge" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfAccessorialcharge" nillable="true" type="tns:ArrayOfAccessorialcharge" />
+  <xs:complexType name="Accessorialcharge">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="chargeAmount" type="xs:float" />
+      <xs:element minOccurs="0" name="id" type="xs:int" />
+      <xs:element minOccurs="0" name="inputs" nillable="true" type="tns:ArrayOfInput" />
+      <xs:element minOccurs="0" name="name" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Accessorialcharge" nillable="true" type="tns:Accessorialcharge" />
+  <xs:complexType name="ArrayOfInput">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Input" nillable="true" type="tns:Input" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfInput" nillable="true" type="tns:ArrayOfInput" />
+  <xs:complexType name="Input">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="id" type="xs:int" />
+      <xs:element minOccurs="0" name="name" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="value" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Input" nillable="true" type="tns:Input" />
+  <xs:complexType name="Dimension">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="height" type="xs:int" />
+      <xs:element minOccurs="0" name="length" type="xs:int" />
+      <xs:element minOccurs="0" name="width" type="xs:int" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Dimension" nillable="true" type="tns:Dimension" />
+  <xs:complexType name="ArrayOfItem">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Item" nillable="true" type="tns:Item" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfItem" nillable="true" type="tns:ArrayOfItem" />
+  <xs:complexType name="Item">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="description" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="dimension" nillable="true" type="tns:Dimension" />
+      <xs:element minOccurs="0" name="harmonizeCode" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="name" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="price" type="xs:float" />
+      <xs:element minOccurs="0" name="quantity" type="xs:int" />
+      <xs:element minOccurs="0" name="sku" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="weightOunces" type="xs:float" />
+      <xs:element minOccurs="0" name="weightPounds" type="xs:float" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Item" nillable="true" type="tns:Item" />
+  <xs:complexType name="ArrayOfClientInformationModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="ClientInformationModel" nillable="true" type="tns:ClientInformationModel" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfClientInformationModel" nillable="true" type="tns:ArrayOfClientInformationModel" />
+  <xs:complexType name="ClientInformationModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="affillateName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="carrierClientContractId" type="xs:int" />
+      <xs:element minOccurs="0" name="carrierName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="nickName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="serviceLevels" nillable="true" type="tns:ArrayOfServicelevel" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ClientInformationModel" nillable="true" type="tns:ClientInformationModel" />
+  <xs:complexType name="ArrayOfServicelevel">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Servicelevel" nillable="true" type="tns:Servicelevel" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfServicelevel" nillable="true" type="tns:ArrayOfServicelevel" />
+  <xs:complexType name="Servicelevel">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="carrierServiceLevelId" type="xs:int" />
+      <xs:element minOccurs="0" name="carrierServiceLevelName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="isInternational" type="xs:boolean" />
+      <xs:element minOccurs="0" name="packageWeightLimit" type="xs:float" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Servicelevel" nillable="true" type="tns:Servicelevel" />
+  <xs:complexType name="ArrayOfSystemCountryModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="SystemCountryModel" nillable="true" type="tns:SystemCountryModel" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfSystemCountryModel" nillable="true" type="tns:ArrayOfSystemCountryModel" />
+  <xs:complexType name="SystemCountryModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="alpha2CodeName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="countryId" type="xs:int" />
+      <xs:element minOccurs="0" name="countryName" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="SystemCountryModel" nillable="true" type="tns:SystemCountryModel" />
+  <xs:complexType name="ArrayOfPrintRequestModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="PrintRequestModel" nillable="true" type="tns:PrintRequestModel" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfPrintRequestModel" nillable="true" type="tns:ArrayOfPrintRequestModel" />
+  <xs:complexType name="PrintRequestModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="dataBlocks" nillable="true" type="tns:ArrayOfDatablock" />
+      <xs:element xmlns:q1="http://schemas.microsoft.com/2003/10/Serialization/Arrays" minOccurs="0" name="flags" nillable="true" type="q1:ArrayOfstring" />
+      <xs:element minOccurs="0" name="printTemplateType" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="PrintRequestModel" nillable="true" type="tns:PrintRequestModel" />
+  <xs:complexType name="ArrayOfDatablock">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Datablock" nillable="true" type="tns:Datablock" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfDatablock" nillable="true" type="tns:ArrayOfDatablock" />
+  <xs:complexType name="Datablock">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="dataSourceName" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="labelKey" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="trackingNumber" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Datablock" nillable="true" type="tns:Datablock" />
+  <xs:complexType name="TokenModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="access_token" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="refreshExpires" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="refreshIssued" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="refresh_token" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="tokenExpires" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="tokenIssued" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="token_type" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="TokenModel" nillable="true" type="tns:TokenModel" />
+  <xs:complexType name="ArrayOfVoidLabelModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="VoidLabelModel" nillable="true" type="tns:VoidLabelModel" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfVoidLabelModel" nillable="true" type="tns:ArrayOfVoidLabelModel" />
+  <xs:complexType name="VoidLabelModel">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="TrackingNumberList" nillable="true" type="tns:ArrayOfTrackingNumber" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="VoidLabelModel" nillable="true" type="tns:VoidLabelModel" />
+  <xs:complexType name="ArrayOfTrackingNumber">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="TrackingNumber" nillable="true" type="tns:TrackingNumber" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfTrackingNumber" nillable="true" type="tns:ArrayOfTrackingNumber" />
+  <xs:complexType name="TrackingNumber">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="trackingNumber" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="TrackingNumber" nillable="true" type="tns:TrackingNumber" />
+</xs:schema>

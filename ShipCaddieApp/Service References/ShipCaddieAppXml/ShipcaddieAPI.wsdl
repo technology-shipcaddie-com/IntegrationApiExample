@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:tns="http://tempuri.org/" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsx="http://schemas.xmlsoap.org/ws/2004/09/mex" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="ShipcaddieAPI" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsp:Policy wsu:Id="BasicHttpsBinding_IShipCaddieAPI_policy">
+    <wsp:ExactlyOne>
+      <wsp:All>
+        <sp:TransportBinding xmlns:sp="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy">
+          <wsp:Policy>
+            <sp:TransportToken>
+              <wsp:Policy>
+                <sp:HttpsToken RequireClientCertificate="false" />
+              </wsp:Policy>
+            </sp:TransportToken>
+            <sp:AlgorithmSuite>
+              <wsp:Policy>
+                <sp:Basic256 />
+              </wsp:Policy>
+            </sp:AlgorithmSuite>
+            <sp:Layout>
+              <wsp:Policy>
+                <sp:Strict />
+              </wsp:Policy>
+            </sp:Layout>
+          </wsp:Policy>
+        </sp:TransportBinding>
+      </wsp:All>
+    </wsp:ExactlyOne>
+  </wsp:Policy>
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://tempuri.org/Imports">
+      <xsd:import schemaLocation="https://testshipcaddieapi.azurewebsites.net/ShipcaddieAPI.svc?xsd=xsd0" namespace="http://tempuri.org/" />
+      <xsd:import schemaLocation="https://testshipcaddieapi.azurewebsites.net/ShipcaddieAPI.svc?xsd=xsd1" namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
+      <xsd:import schemaLocation="https://testshipcaddieapi.azurewebsites.net/ShipcaddieAPI.svc?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/ShipCaddieAPIInterface" />
+      <xsd:import schemaLocation="https://testshipcaddieapi.azurewebsites.net/ShipcaddieAPI.svc?xsd=xsd3" namespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="IShipCaddieAPI_AddShipment_InputMessage">
+    <wsdl:part name="parameters" element="tns:AddShipment" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_AddShipment_OutputMessage">
+    <wsdl:part name="parameters" element="tns:AddShipmentResponse" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetClientContractInformation_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetClientContractInformation" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetClientContractInformation_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetClientContractInformationResponse" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetCountrySystemInformation_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetCountrySystemInformation" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetCountrySystemInformation_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetCountrySystemInformationResponse" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetLabels_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetLabels" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetLabels_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetLabelsResponse" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetRate_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetRate" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetRate_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetRateResponse" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetToken_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetToken" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_GetToken_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetTokenResponse" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_RefreshToken_InputMessage">
+    <wsdl:part name="parameters" element="tns:RefreshToken" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_RefreshToken_OutputMessage">
+    <wsdl:part name="parameters" element="tns:RefreshTokenResponse" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_VoidLabel_InputMessage">
+    <wsdl:part name="parameters" element="tns:VoidLabel" />
+  </wsdl:message>
+  <wsdl:message name="IShipCaddieAPI_VoidLabel_OutputMessage">
+    <wsdl:part name="parameters" element="tns:VoidLabelResponse" />
+  </wsdl:message>
+  <wsdl:portType name="IShipCaddieAPI">
+    <wsdl:operation name="AddShipment">
+      <wsdl:input wsaw:Action="http://tempuri.org/IShipCaddieAPI/AddShipment" message="tns:IShipCaddieAPI_AddShipment_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IShipCaddieAPI/AddShipmentResponse" message="tns:IShipCaddieAPI_AddShipment_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetClientContractInformation">
+      <wsdl:input wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetClientContractInformation" message="tns:IShipCaddieAPI_GetClientContractInformation_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetClientContractInformationResponse" message="tns:IShipCaddieAPI_GetClientContractInformation_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetCountrySystemInformation">
+      <wsdl:input wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetCountrySystemInformation" message="tns:IShipCaddieAPI_GetCountrySystemInformation_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetCountrySystemInformationResponse" message="tns:IShipCaddieAPI_GetCountrySystemInformation_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetLabels">
+      <wsdl:input wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetLabels" message="tns:IShipCaddieAPI_GetLabels_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetLabelsResponse" message="tns:IShipCaddieAPI_GetLabels_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetRate">
+      <wsdl:input wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetRate" message="tns:IShipCaddieAPI_GetRate_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetRateResponse" message="tns:IShipCaddieAPI_GetRate_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetToken">
+      <wsdl:input wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetToken" message="tns:IShipCaddieAPI_GetToken_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IShipCaddieAPI/GetTokenResponse" message="tns:IShipCaddieAPI_GetToken_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="RefreshToken">
+      <wsdl:input wsaw:Action="http://tempuri.org/IShipCaddieAPI/RefreshToken" message="tns:IShipCaddieAPI_RefreshToken_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IShipCaddieAPI/RefreshTokenResponse" message="tns:IShipCaddieAPI_RefreshToken_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="VoidLabel">
+      <wsdl:input wsaw:Action="http://tempuri.org/IShipCaddieAPI/VoidLabel" message="tns:IShipCaddieAPI_VoidLabel_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IShipCaddieAPI/VoidLabelResponse" message="tns:IShipCaddieAPI_VoidLabel_OutputMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="BasicHttpBinding_IShipCaddieAPI" type="tns:IShipCaddieAPI">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="AddShipment">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/AddShipment" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetClientContractInformation">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetClientContractInformation" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetCountrySystemInformation">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetCountrySystemInformation" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetLabels">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetLabels" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetRate">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetRate" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetToken">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetToken" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="RefreshToken">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/RefreshToken" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="VoidLabel">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/VoidLabel" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="BasicHttpsBinding_IShipCaddieAPI" type="tns:IShipCaddieAPI">
+    <wsp:PolicyReference URI="#BasicHttpsBinding_IShipCaddieAPI_policy" />
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="AddShipment">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/AddShipment" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetClientContractInformation">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetClientContractInformation" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetCountrySystemInformation">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetCountrySystemInformation" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetLabels">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetLabels" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetRate">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetRate" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetToken">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/GetToken" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="RefreshToken">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/RefreshToken" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="VoidLabel">
+      <soap:operation soapAction="http://tempuri.org/IShipCaddieAPI/VoidLabel" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ShipcaddieAPI">
+    <wsdl:port name="BasicHttpBinding_IShipCaddieAPI" binding="tns:BasicHttpBinding_IShipCaddieAPI">
+      <soap:address location="http://testshipcaddieapi.azurewebsites.net/ShipcaddieAPI.svc" />
+    </wsdl:port>
+    <wsdl:port name="BasicHttpsBinding_IShipCaddieAPI" binding="tns:BasicHttpsBinding_IShipCaddieAPI">
+      <soap:address location="https://testshipcaddieapi.azurewebsites.net/ShipcaddieAPI.svc" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
