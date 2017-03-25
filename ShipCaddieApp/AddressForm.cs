@@ -1,4 +1,4 @@
-﻿    using RestSharp;
+﻿using RestSharp;
 using ShipCaddieApp.Models;
 using ShipCaddieApp.ShipCaddieAppXml;
 using System;
@@ -22,11 +22,11 @@ namespace ShipCaddieApp
         public static ShipAddressModel _addressTo = new ShipAddressModel();
         public static ShipAddressModel _addressFrom = new ShipAddressModel();
 
-        //To check the request type of Address coming from Form1
+        //To check the request type of Address coming from Main
         public static string AddressWay = "";
-        //Access the User token from Form1 and pass here for authentication
-        string _Rest_Access_Token = Form1.rest_tokenModel.AccessToken;
-        string _SOAP_Access_Token = Form1.soap_tokenModel.access_token;
+        //Access the User token from Main and pass here for authentication
+        string _Rest_Access_Token = Main.rest_tokenModel.AccessToken;
+        string _SOAP_Access_Token = Main.soap_tokenModel.access_token;
 
         #endregion
 
@@ -44,7 +44,7 @@ namespace ShipCaddieApp
         private void callBindCountryforCode()
         {
             Cursor.Current = Cursors.WaitCursor;
-            int _formatId = Form1._formatTypeId;
+            int _formatId = Main._formatTypeId;
             if (_formatId == 1) // Id:1 - JSON
             {
                 var countryData = bindCountryforCode(); //Bind the country
@@ -148,9 +148,9 @@ namespace ShipCaddieApp
         private void btnSaveAdd_Click(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            var getAddress = BindAddress(Form1._addressWay);
+            var getAddress = BindAddress(Main._addressWay);
 
-            if (Form1._addressWay == "ShipTo")
+            if (Main._addressWay == "ShipTo")
             {
                 _addressTo.CustomerId = getAddress.customerId;
                 _addressTo.Organization = getAddress.organization;
@@ -188,7 +188,7 @@ namespace ShipCaddieApp
 
         private AddressModel BindAddress(string _addressWay)
         {
-            int _formatId = Form1._formatTypeId;
+            int _formatId = Main._formatTypeId;
             _address.customerId = txtCID.Text;
             _address.organization = txtOrganization.Text;
             _address.Address1 = txtAdd1.Text;

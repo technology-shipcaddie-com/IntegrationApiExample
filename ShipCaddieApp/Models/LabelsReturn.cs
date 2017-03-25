@@ -27,7 +27,8 @@ namespace ShipCaddieApp.Models
 
     public class RootObject
     {
+        public string shipmentId { get; set; }
         public List<PrintJob> printJobs { get; set; }
-        public List<object> odbcNotification { get; set; }
+        public object odbcNotification { get; set; }
     }
 }
