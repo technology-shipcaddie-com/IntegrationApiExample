@@ -72,7 +72,7 @@ namespace ShipCaddieApp
         }
         #endregion
 
-        #region API Call
+        #region API Methods
 
         #region ShipCaddie REST or JSON API methods. HELP LINK: http://YourcallbackURL/help#Integration
 
@@ -655,23 +655,35 @@ namespace ShipCaddieApp
         /// <param name="e"></param>
         private void btnGetToken_Click(object sender, EventArgs e)
         {
-            EmptyHeaderMsg();
             Cursor.Current = Cursors.WaitCursor;
-            Settings.BASE_URL = txtAPIUrl.Text;
-            string _usrName = txtUN.Text.ToString();
-            string _usrPwd = txtPwd.Text.ToString();
-            txtUN.Text = "";
-            txtPwd.Text = "";
-            if (!string.IsNullOrEmpty(_usrName) && !string.IsNullOrEmpty(_usrPwd))
+            string _baseUrl = txtAPIUrl.Text;
+            string _uName = txtUN.Text.ToString();
+            string _uPwd = txtPwd.Text.ToString();
+            EmptyHeaderMsg();
+            if (!string.IsNullOrEmpty(_baseUrl) && !string.IsNullOrEmpty(_uName) && !string.IsNullOrEmpty(_uPwd))
             {
-                Settings.USER = _usrName;
-                Settings.USER_PWD = _usrPwd;
-                var getResposne = GetToken();
-                if (getResposne != null)
+                Settings.BASE_URL = _baseUrl;
+                string _usrName = _uName;
+                string _usrPwd = _uPwd;
+                txtUN.Text = "";
+                txtPwd.Text = "";
+                if (!string.IsNullOrEmpty(_usrName) && !string.IsNullOrEmpty(_usrPwd))
                 {
-                    IsEnabledControls(true);
-                    callClientContractInformation();
+                    Settings.USER = _usrName;
+                    Settings.USER_PWD = _usrPwd;
+                    var getResposne = GetToken();
+                    if (getResposne != null)
+                    {
+                        IsEnabledControls(true);
+                        callClientContractInformation();
+                    }
                 }
+            }
+            else
+            {
+                lbl_LabelMessage.Text = "Message: ";
+                ErrorLabel.Text = "Base WebAPI URL or Username/Password cannot be empty.Please check and try it again.";
+                ErrorLabel.ForeColor = Color.Red;
             }
         }
         #endregion
@@ -843,6 +855,7 @@ namespace ShipCaddieApp
             btnVoidLabel.Enabled = IsActive;
             btnShipmentId.Enabled = IsActive;
             btnRefreshToken.Enabled = IsActive;
+            btnGetShipment.Enabled = IsActive;
         }
         #endregion
 
