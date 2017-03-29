@@ -41,6 +41,7 @@
             this.lblUN = new System.Windows.Forms.Label();
             this.lblPwd = new System.Windows.Forms.Label();
             this.tabAddShipment = new System.Windows.Forms.TabPage();
+            this.lnlblRate = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.lblShipmentId = new System.Windows.Forms.Label();
             this.txtShipId = new System.Windows.Forms.TextBox();
@@ -84,6 +85,9 @@
             this.btnVoidLabel = new System.Windows.Forms.Button();
             this.lblVoidLabel = new System.Windows.Forms.Label();
             this.tabShipInfo = new System.Windows.Forms.TabPage();
+            this.lbl2TrackNo = new System.Windows.Forms.Label();
+            this.txtTrack = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.lblTracking = new System.Windows.Forms.Label();
             this.btnGetShipment = new System.Windows.Forms.Button();
@@ -96,10 +100,6 @@
             this.txtAPIUrl = new System.Windows.Forms.TextBox();
             this.lbl_LabelMessage = new System.Windows.Forms.Label();
             this.ErrorLabel = new System.Windows.Forms.Label();
-            this.lnlblRate = new System.Windows.Forms.Button();
-            this.txtTrack = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.lbl2TrackNo = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabGetToken.SuspendLayout();
             this.tabAddShipment.SuspendLayout();
@@ -290,6 +290,20 @@
             this.tabAddShipment.TabIndex = 1;
             this.tabAddShipment.Text = "Add Shipment";
             this.tabAddShipment.UseVisualStyleBackColor = true;
+            // 
+            // lnlblRate
+            // 
+            this.lnlblRate.BackColor = System.Drawing.SystemColors.MenuHighlight;
+            this.lnlblRate.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.lnlblRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lnlblRate.ForeColor = System.Drawing.Color.White;
+            this.lnlblRate.Location = new System.Drawing.Point(520, 454);
+            this.lnlblRate.Name = "lnlblRate";
+            this.lnlblRate.Size = new System.Drawing.Size(106, 29);
+            this.lnlblRate.TabIndex = 90;
+            this.lnlblRate.Text = "Get Rate";
+            this.lnlblRate.UseVisualStyleBackColor = false;
+            this.lnlblRate.Click += new System.EventHandler(this.lnlblRate_Click);
             // 
             // pictureBox1
             // 
@@ -764,6 +778,35 @@
             this.tabShipInfo.TabIndex = 3;
             this.tabShipInfo.Text = "Get Shipment Information";
             this.tabShipInfo.UseVisualStyleBackColor = true;
+            this.tabShipInfo.Click += new System.EventHandler(this.tabShipInfo_Click);
+            // 
+            // lbl2TrackNo
+            // 
+            this.lbl2TrackNo.AutoSize = true;
+            this.lbl2TrackNo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl2TrackNo.ForeColor = System.Drawing.Color.DarkOrange;
+            this.lbl2TrackNo.Location = new System.Drawing.Point(224, 276);
+            this.lbl2TrackNo.Name = "lbl2TrackNo";
+            this.lbl2TrackNo.Size = new System.Drawing.Size(0, 13);
+            this.lbl2TrackNo.TabIndex = 93;
+            // 
+            // txtTrack
+            // 
+            this.txtTrack.Location = new System.Drawing.Point(226, 253);
+            this.txtTrack.Name = "txtTrack";
+            this.txtTrack.Size = new System.Drawing.Size(246, 20);
+            this.txtTrack.TabIndex = 92;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.ForeColor = System.Drawing.Color.Firebrick;
+            this.label3.Location = new System.Drawing.Point(88, 257);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(118, 16);
+            this.label3.TabIndex = 91;
+            this.label3.Text = "Tracking Number :";
             // 
             // pictureBox2
             // 
@@ -887,48 +930,6 @@
             this.ErrorLabel.Name = "ErrorLabel";
             this.ErrorLabel.Size = new System.Drawing.Size(0, 18);
             this.ErrorLabel.TabIndex = 92;
-            // 
-            // lnlblRate
-            // 
-            this.lnlblRate.BackColor = System.Drawing.SystemColors.MenuHighlight;
-            this.lnlblRate.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.lnlblRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lnlblRate.ForeColor = System.Drawing.Color.White;
-            this.lnlblRate.Location = new System.Drawing.Point(520, 454);
-            this.lnlblRate.Name = "lnlblRate";
-            this.lnlblRate.Size = new System.Drawing.Size(106, 29);
-            this.lnlblRate.TabIndex = 90;
-            this.lnlblRate.Text = "Get Rate";
-            this.lnlblRate.UseVisualStyleBackColor = false;
-            this.lnlblRate.Click += new System.EventHandler(this.lnlblRate_Click);
-            // 
-            // txtTrack
-            // 
-            this.txtTrack.Location = new System.Drawing.Point(226, 253);
-            this.txtTrack.Name = "txtTrack";
-            this.txtTrack.Size = new System.Drawing.Size(246, 20);
-            this.txtTrack.TabIndex = 92;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.ForeColor = System.Drawing.Color.Firebrick;
-            this.label3.Location = new System.Drawing.Point(88, 257);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(118, 16);
-            this.label3.TabIndex = 91;
-            this.label3.Text = "Tracking Number :";
-            // 
-            // lbl2TrackNo
-            // 
-            this.lbl2TrackNo.AutoSize = true;
-            this.lbl2TrackNo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl2TrackNo.ForeColor = System.Drawing.Color.DarkOrange;
-            this.lbl2TrackNo.Location = new System.Drawing.Point(224, 276);
-            this.lbl2TrackNo.Name = "lbl2TrackNo";
-            this.lbl2TrackNo.Size = new System.Drawing.Size(0, 13);
-            this.lbl2TrackNo.TabIndex = 93;
             // 
             // Main
             // 

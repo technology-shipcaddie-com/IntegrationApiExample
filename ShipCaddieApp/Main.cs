@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using RestSharp;
+using RestSharp.Serializers;
 using ShipCaddieApp.Models;
 using ShipCaddieApp.ShipCaddieAppXml;
 using System;
@@ -9,15 +10,16 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace ShipCaddieApp
 {
     public partial class Main : Form
     {
-
         #region Class objects and Global variables
 
         #region Address Models
@@ -53,6 +55,7 @@ namespace ShipCaddieApp
         #endregion
 
         #region Form(Main) constructor
+
         /// <summary>
         /// It is a Constructor of Form1 which call first when the Form1 is loaded.
         /// </summary>
@@ -69,7 +72,7 @@ namespace ShipCaddieApp
         }
         #endregion
 
-        #region SOAP/REST API Method calls
+        #region API Call
 
         #region ShipCaddie REST or JSON API methods. HELP LINK: http://YourcallbackURL/help#Integration
 
@@ -80,47 +83,69 @@ namespace ShipCaddieApp
         /// <returns>Get unique token from shipcaddie server </returns>
         private Models.TokenModel GetToken()
         {
-            if (!string.IsNullOrEmpty(Settings.USER) && !string.IsNullOrEmpty(Settings.USER_PWD))
+            //GET integration/v1/Token?username={username}&password={password}
+            Cursor.Current = Cursors.WaitCursor;
+            int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+            try
             {
-                //GET integration/v1/Token?username={username}&password={password} 
-                RestClient client = new RestClient(Settings.BASE_URL);
-                RestRequest request = new RestRequest("integration/v1/Token?username=" + Settings.USER + "&password=" + Settings.USER_PWD, Method.GET);
-                request.RequestFormat = DataFormat.Json;
-                request.JsonSerializer.ContentType = "application/json";
-                var response = client.Execute<ShipCaddieApp.Models.TokenModel>(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (!string.IsNullOrEmpty(Settings.USER) && !string.IsNullOrEmpty(Settings.USER_PWD))
                 {
-                    rest_tokenModel.AccessToken = response.Data.AccessToken;
-                    rest_tokenModel.refreshExpires = response.Data.refreshExpires;
-                    rest_tokenModel.RefreshIssued = response.Data.RefreshIssued;
-                    rest_tokenModel.RefreshToken = response.Data.RefreshToken;
-                    rest_tokenModel.TokenExpires = response.Data.TokenExpires;
-                    rest_tokenModel.TokenIssued = response.Data.TokenIssued;
-                    rest_tokenModel.TokenType = response.Data.TokenType;
-                    txtGToken.Text = response.Data.AccessToken; //Bind the access_token in token textbox
-                    txtRefToken.Text = response.Data.RefreshToken; // Bind the refresh token in refresh token textbox
-                    lbl_LabelMessage.Text = "Message: ";
-                    ErrorLabel.Text = "Token is generated successfully";
-                    ErrorLabel.ForeColor = Color.Green;
-                    return rest_tokenModel;
+                    RestClient client = new RestClient(Settings.BASE_URL);
+                    RestRequest request = new RestRequest("integration/v1/Token?username=" + Settings.USER + "&password=" + Settings.USER_PWD, Method.GET);
+                    if (selectedId == 1)
+                    {
+                        request.RequestFormat = DataFormat.Json;
+                        request.JsonSerializer.ContentType = "application/json";
+                    }
+                    else
+                    {
+                        request.RequestFormat = DataFormat.Xml;
+                        request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                        request.XmlSerializer.ContentType = "application/xml";
+                    }
+                    var response = client.Execute<ShipCaddieApp.Models.TokenModel>(request);
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        rest_tokenModel.AccessToken = response.Data.AccessToken;
+                        rest_tokenModel.refreshExpires = response.Data.refreshExpires;
+                        rest_tokenModel.RefreshIssued = response.Data.RefreshIssued;
+                        rest_tokenModel.RefreshToken = response.Data.RefreshToken;
+                        rest_tokenModel.TokenExpires = response.Data.TokenExpires;
+                        rest_tokenModel.TokenIssued = response.Data.TokenIssued;
+                        rest_tokenModel.TokenType = response.Data.TokenType;
+                        txtGToken.Text = response.Data.AccessToken; //Bind the access_token in token textbox
+                        txtRefToken.Text = response.Data.RefreshToken; // Bind the refresh token in refresh token textbox
+                        lbl_LabelMessage.Text = "Message: ";
+                        ErrorLabel.Text = "Token is generated successfully";
+                        ErrorLabel.ForeColor = Color.Green;
+                        return rest_tokenModel;
+                    }
+                    else
+                    {
+                        lbl_LabelMessage.Text = "Message: ";
+                        var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                        ErrorLabel.Text = message.developerMessage;
+                        ErrorLabel.ForeColor = Color.Red;
+                        return null;
+                    }
                 }
                 else
                 {
                     lbl_LabelMessage.Text = "Message: ";
-                    var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                    ErrorLabel.Text = message.developerMessage;
+                    ErrorLabel.Text = "Username/Password cannot be empty.Please check and try it again";
                     ErrorLabel.ForeColor = Color.Red;
+                    soap_tokenModel.access_token = null;
                     return null;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Username/Password cannot be empty.Please check and try it again";
+                lbl_LabelMessage.Text = "Message";
+                ErrorLabel.Text = ex.Message + ".Please check the all input fields,all fields will be fill correctly.";
                 ErrorLabel.ForeColor = Color.Red;
-                soap_tokenModel.access_token = null;
                 return null;
             }
+
         }
 
         /// <summary>
@@ -131,33 +156,54 @@ namespace ShipCaddieApp
         private List<ShipCaddieApp.Models.ClientInformationModel> GetClientContractInformation()
         {
             //GET integration/v1/GetClientContractInformation
-
-            List<ShipCaddieApp.Models.ClientInformationModel> lst_CIM = new List<ShipCaddieApp.Models.ClientInformationModel>();
-            RestClient client = new RestClient(Settings.BASE_URL);
-            RestRequest request = new RestRequest("integration/v1/GetClientContractInformation", Method.GET);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
-            request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
-            var response = client.Execute<List<ShipCaddieApp.Models.ClientInformationModel>>(request);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            Cursor.Current = Cursors.WaitCursor;
+            try
             {
-                foreach (var item in response.Data)
+                int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+                List<ShipCaddieApp.Models.ClientInformationModel> lst_CIM = new List<ShipCaddieApp.Models.ClientInformationModel>();
+                RestClient client = new RestClient(Settings.BASE_URL);
+                RestRequest request = new RestRequest("integration/v1/GetClientContractInformation", Method.GET);
+                if (selectedId == 1)
                 {
-                    ShipCaddieApp.Models.ClientInformationModel CIM = new ShipCaddieApp.Models.ClientInformationModel();
-                    CIM.AffillateName = item.AffillateName;
-                    CIM.CarrierClientContractId = item.CarrierClientContractId;
-                    CIM.CarrierName = item.CarrierName;
-                    CIM.NickName = item.NickName;
-                    CIM.ServiceLevels = item.ServiceLevels;
-                    lst_CIM.Add(CIM);
+                    request.RequestFormat = DataFormat.Json;
+                    request.JsonSerializer.ContentType = "application/json";
                 }
-                return lst_CIM;
+                else
+                {
+                    request.RequestFormat = DataFormat.Xml;
+                    request.XmlSerializer.ContentType = "application/xml";
+                    request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                }
+                request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
+                var response = client.Execute<List<ShipCaddieApp.Models.ClientInformationModel>>(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    foreach (var item in response.Data)
+                    {
+                        ShipCaddieApp.Models.ClientInformationModel CIM = new ShipCaddieApp.Models.ClientInformationModel();
+                        CIM.AffillateName = item.AffillateName;
+                        CIM.CarrierClientContractId = item.CarrierClientContractId;
+                        CIM.CarrierName = item.CarrierName;
+                        CIM.NickName = item.NickName;
+                        CIM.ServiceLevels = item.ServiceLevels;
+                        lst_CIM.Add(CIM);
+                    }
+                    return lst_CIM;
+                }
+                else
+                {
+                    lbl_LabelMessage.Text = "Message: ";
+                    var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                    ErrorLabel.Text = message.developerMessage;
+                    ErrorLabel.ForeColor = Color.Red;
+                    return null;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lbl_LabelMessage.Text = "Message: ";
-                var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                ErrorLabel.Text = message.developerMessage;
+                lbl_LabelMessage.Text = "Message";
+                ErrorLabel.Text = ex.Message + ".Please check the all input fields,all fields will be fill correctly.";
                 ErrorLabel.ForeColor = Color.Red;
                 return null;
             }
@@ -171,695 +217,52 @@ namespace ShipCaddieApp
         private List<ServiceLevelModel> GetClientContractInformation(int CarrierId)
         {
             //GET integration/v1/GetClientContractInformation
-
-            List<ServiceLevelModel> lst_CIM = new List<ServiceLevelModel>();
-            RestClient client = new RestClient(Settings.BASE_URL);
-            RestRequest request = new RestRequest("integration/v1/GetClientContractInformation", Method.GET);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
-            request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
-            var response = client.Execute<List<ShipCaddieApp.Models.ClientInformationModel>>(request);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            try
             {
-                foreach (var item in response.Data)
+                int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+                List<ServiceLevelModel> lst_CIM = new List<ServiceLevelModel>();
+                RestClient client = new RestClient(Settings.BASE_URL);
+                RestRequest request = new RestRequest("integration/v1/GetClientContractInformation", Method.GET);
+                if (selectedId == 1) //1 JSON
                 {
-                    if (item.CarrierClientContractId == CarrierId)
+                    request.RequestFormat = DataFormat.Json;
+                    request.JsonSerializer.ContentType = "application/json";
+                }
+                else
+                {
+                    request.RequestFormat = DataFormat.Xml;
+                    request.XmlSerializer.ContentType = "application/xml";
+                    request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                }
+                request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
+                var response = client.Execute<List<ShipCaddieApp.Models.ClientInformationModel>>(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    foreach (var item in response.Data)
                     {
-                        foreach (var item2 in item.ServiceLevels)
+                        if (item.CarrierClientContractId == CarrierId)
                         {
-                            ServiceLevelModel CIM = new ServiceLevelModel();
-                            CIM.CarrierServiceLevelId = item2.CarrierServiceLevelId;
-                            CIM.CarrierServiceLevelName = item2.CarrierServiceLevelName;
-                            CIM.IsInternational = item2.IsInternational;
-                            CIM.PackageWeightLimit = item2.PackageWeightLimit;
-                            lst_CIM.Add(CIM);
+                            foreach (var item2 in item.ServiceLevels)
+                            {
+                                ServiceLevelModel CIM = new ServiceLevelModel();
+                                CIM.CarrierServiceLevelId = item2.CarrierServiceLevelId;
+                                CIM.CarrierServiceLevelName = item2.CarrierServiceLevelName;
+                                CIM.IsInternational = item2.IsInternational;
+                                CIM.PackageWeightLimit = item2.PackageWeightLimit;
+                                lst_CIM.Add(CIM);
+                            }
                         }
                     }
-                }
-                return lst_CIM;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                ErrorLabel.Text = message.developerMessage;
-                ErrorLabel.ForeColor = Color.Red;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Get rates
-        /// </summary>
-        /// Method Help Link: http://YourCallbackURL/Help/Api/POST-integration-v1-GetRate
-        private void GetRate()
-        {
-            // POST integration/v1/GetRate
-            RestClient client = new RestClient(Settings.BASE_URL);
-            RestRequest request = new RestRequest("integration/v1/GetRate", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
-            request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
-            request.AddBody(CreateShipmentModel());
-            var response = client.Execute<ShipCaddieApp.Models.ShipmentModelIntegration>(request);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                foreach (var package in response.Data.Packages)
-                {
-                    dataGridView1.DataSource = package.AccessorialCharges.Select(x =>
-                    new AccessorialChargeModel
-                    {
-                        Name = x.Name,
-                        ChargeAmount = x.ChargeAmount,
-                    }).ToList();
-                    lbl_LabelMessage.Text = "Message: ";
-                    ErrorLabel.Text = "Get the rates successfully.";
-                    ErrorLabel.ForeColor = Color.Green;
-                }
-            }
-            else
-            {
-                var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = message.developerMessage;
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-        /// <summary>
-        /// To create and get a Shipment label
-        /// </summary>
-        /// Method Help Link: http://YourCallbackURL/Help/Api/POST-integration-v1-GetLabels
-        private void CreateLabel()
-        {
-            //POST integration/v1/GetLabels
-
-            RestClient client = new RestClient(Settings.BASE_URL);
-            RestRequest request = new RestRequest("integration/v1/GetLabels", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
-            request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
-            request.AddBody(CreateShipmentModel());
-            var response = client.Execute<List<RootObject>>(request);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                foreach (var item in response.Data)
-                {
-                    if (item.printJobs != null)
-                    {
-                        txtTrackingBox.Text = item.shipmentId;
-                        foreach (var item2 in item.printJobs)
-                        {
-                            var label = item2.dataBlocks.Select(x => x.data).FirstOrDefault();
-                            txtGVoidLabel.Text = item2.dataBlocks.Select(x => x.labelKey).FirstOrDefault();
-                            pictureBox1.Image = Base64ToImage(label);
-                            lbl_LabelMessage.Text = "Message: ";
-                            ErrorLabel.Text = "Successfully GetLabels";
-                            ErrorLabel.ForeColor = Color.Green;
-                        }
-                    }
-                    else
-                    {
-                        lbl_LabelMessage.Text = "Message";
-                        var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                        ErrorLabel.Text = message.developerMessage;
-                        ErrorLabel.ForeColor = Color.Red;
-                    }
-                }
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message";
-                var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                ErrorLabel.Text = message.developerMessage;
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-        /// <summary>
-        /// To delete a generated label by passing unique 'labelKey'
-        /// </summary>
-        /// Method Help Link: http://YourCallbackURL/Help/Api/POST-integration-v1-VoidLabel_labelKey
-        /// <Return>Returns a keyValue</Return>
-        /// <Return Params>TrackingNumber: The tracking number of the package</Return>
-        public List<ShipCaddieApp.Models.VoidLabelModel> VoidLabel(string labelkey)
-        {
-            List<ShipCaddieApp.Models.VoidLabelModel> lst_voidLabel = new List<Models.VoidLabelModel>();
-            //POST integration/v1/VoidLabel?labelKey={labelKey}
-            RestClient client = new RestClient(Settings.BASE_URL);
-            RestRequest request = new RestRequest("integration/v1/VoidLabel?labelKey={labelKey}", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
-            request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
-            request.AddParameter("labelKey", labelkey, ParameterType.UrlSegment);
-            var response = client.Execute<List<ShipCaddieApp.Models.VoidLabelModel>>(request);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                foreach (var item in response.Data)
-                {
-                    ShipCaddieApp.Models.VoidLabelModel voidLabel = new Models.VoidLabelModel();
-                    voidLabel.TrackingNumber = item.TrackingNumber;
-                    voidLabel.Error = new ApiErrorModel()
-                    {
-                        Message = null,
-                        IsSuccess = true
-                    };
-                    lst_voidLabel.Add(voidLabel);
-                    txtTrackingNo.Text = item.TrackingNumber;
-                    lblTrackingNo.Text = "Please copy and save above Tracking Number";
-                    lbl_LabelMessage.Text = "Message: ";
-                    ErrorLabel.Text = "Successfully get the Tracking number.";
-                    ErrorLabel.ForeColor = Color.Green;
-                }
-                return lst_voidLabel;
-            }
-            else
-            {
-                string message = Convert.ToString(JsonConvert.DeserializeObject<Models.Message>(response.Content));
-                lbl_LabelMessage.Text = "Message";
-                ErrorLabel.Text = message;
-                ErrorLabel.ForeColor = Color.Red;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Return token based on consumer resfresh token. The token is needed to access all endpoints into this integration package.
-        /// </summary>
-        /// Method Help Link: http://YourCallbackURL/Help/Api/GET-integration-v1-RefreshToken_refreshToken
-        /// <Return>Returns a token and refresh token</Return>
-        public void RefreshToken()
-        {
-            //GET integration/v1/RefreshToken?refreshToken={refreshToken}
-            RestClient client = new RestClient(Settings.BASE_URL);
-            RestRequest request = new RestRequest("integration/v1/RefreshToken?refreshToken=" + rest_tokenModel.RefreshToken, Method.GET);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
-            var response = client.Execute<ShipCaddieApp.Models.TokenModel>(request);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                rest_tokenModel.AccessToken = response.Data.AccessToken;
-                rest_tokenModel.refreshExpires = response.Data.refreshExpires;
-                rest_tokenModel.RefreshIssued = response.Data.RefreshIssued;
-                rest_tokenModel.RefreshToken = response.Data.RefreshToken;
-                rest_tokenModel.TokenExpires = response.Data.TokenExpires;
-                rest_tokenModel.TokenIssued = response.Data.TokenIssued;
-                rest_tokenModel.TokenType = response.Data.TokenType;
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Token is refreshed successfully.";
-                ErrorLabel.ForeColor = Color.Green;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message";
-                var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                ErrorLabel.Text = message.developerMessage;
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-        /// <summary>
-        /// The object model (ShipmentModel) needs to be set by the endpoint consumer in order to get a Rate and Save the shipment into ShipCaddie
-        /// </summary>
-        /// Method Help Link: http://YourCallbackURL/Help/Api/POST-integration-v1-AddShipment
-        /// <Return>The object model (ShipmentModel) needs to be set by the endpoint consumer in order to get a Rate and Save the shipment into ShipCaddieReturns a object of type ShipmentModel with the rate and accessorial charges (when available)</Return>
-        public void AddShipment()
-        {
-            RestClient client = new RestClient(Settings.BASE_URL);
-            RestRequest request = new RestRequest("integration/v1/AddShipment", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
-            request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
-            request.AddBody(CreateShipmentModel());
-            var response = client.Execute<List<ShipCaddieApp.Models.ShipmentModelIntegration>>(request);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                foreach (var item in response.Data)
-                {
-                    txtShipId.Text = item.ShipmentId.ToString();
-                    lbl_LabelMessage.Text = "Message: ";
-                    ErrorLabel.Text = "Get Shipment Id successfully.";
-                    lblShipmentId.Text = "Please copy and save shipment id from above textbox.";
-                    ErrorLabel.ForeColor = Color.Green;
-                }
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                ErrorLabel.Text = message.developerMessage;
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-        /// <summary>
-        /// TO get the shipment details
-        /// </summary>
-        /// Method Help Link: https://YourCallbackURL/Help/Api/GET-integration-v1-GetShipmentInfo_shipmentId
-        /// <param name="_shipmentId">A unique shipment id</param>
-        public void GetShipmentInfo(int _shipmentId)
-        {
-            RestClient client = new RestClient(Settings.BASE_URL);
-            RestRequest request = new RestRequest("integration/v1/GetShipmentInfo?shipmentId={shipmentId}", Method.GET);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
-            request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
-            request.AddParameter("shipmentId", _shipmentId, ParameterType.UrlSegment);
-            var response = client.Execute<List<ShipCaddieApp.Models.ShipmentInfoModel.RootObject>>(request);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                foreach (var item in response.Data)
-                {
-                    if (item.labelList != null)
-                    {
-                        foreach (var item2 in item.labelList)
-                        {
-                            pictureBox2.Image = Base64ToImage(item2.labelData);
-                            txtTrack.Text = item2.trackingNumber; //Get tracking number after call GetShipmentInfo method
-                            lbl2TrackNo.Text = "Please save Tracking Number for future reference.";
-                        }
-                    }
-                    else
-                    {
-                        lbl_LabelMessage.Text = "Message: ";
-                        ErrorLabel.Text = "Not retreived any data related to shipment id. Please contact to app administartor.";
-                        ErrorLabel.ForeColor = Color.Red;
-                    }
-                }
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
-                ErrorLabel.Text = message.developerMessage;
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-
-        #endregion
-
-        #region ShipCaddie SOAP or XML API methods. HELP LINK : https://testshipcaddieapi.azurewebsites.net/ShipcaddieAPI.svc
-
-        /// <summary>
-        /// Generate a token on the basis of Userame and password
-        /// </summary>
-        /// <returns>Returns a token list with refresh and access token</returns>
-        private ShipCaddieAppXml.TokenModel XMLGetToken()
-        {
-            if (!string.IsNullOrEmpty(Settings.USER) && !string.IsNullOrEmpty(Settings.USER_PWD))
-            {
-                ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-                var getTokenResposne = client.GetToken(Settings.USER, Settings.USER_PWD);
-                // Always close the client.
-                client.Close();
-                if (getTokenResposne.access_token != null)
-                {
-                    soap_tokenModel.access_token = getTokenResposne.access_token;
-                    soap_tokenModel.refreshExpires = getTokenResposne.refreshExpires;
-                    soap_tokenModel.refreshIssued = getTokenResposne.refreshIssued;
-                    soap_tokenModel.refresh_token = getTokenResposne.refresh_token;
-                    soap_tokenModel.tokenExpires = getTokenResposne.tokenExpires;
-                    soap_tokenModel.tokenIssued = getTokenResposne.tokenIssued;
-                    soap_tokenModel.token_type = getTokenResposne.token_type;
-                    txtGToken.Text = getTokenResposne.access_token; //Bind the access_token in token textbox
-                    txtRefToken.Text = getTokenResposne.refresh_token; // Bind the refresh token in refresh token textbox
-                    lbl_LabelMessage.Text = "Message: ";
-                    ErrorLabel.Text = "Token is generated successfully.";
-                    ErrorLabel.ForeColor = Color.Green;
+                    return lst_CIM;
                 }
                 else
                 {
                     lbl_LabelMessage.Text = "Message: ";
-                    ErrorLabel.Text = "Access_Token is empty,please check your username and password.";
+                    var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                    ErrorLabel.Text = message.developerMessage;
                     ErrorLabel.ForeColor = Color.Red;
-                    soap_tokenModel.access_token = null;
+                    return null;
                 }
-                return soap_tokenModel;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Username/Password cannot be empty.Please check and try it again";
-                ErrorLabel.ForeColor = Color.Red;
-                soap_tokenModel.access_token = null;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Get the Client Contarct information i.e, Carrier names
-        /// </summary>
-        /// <returns>Returns a list of Carrier name</returns>
-        private List<ShipCaddieAppXml.ClientInformationModel> XMLGetClientContractInformation()
-        {
-            List<ShipCaddieAppXml.ClientInformationModel> lst_ClientContract = new List<ShipCaddieAppXml.ClientInformationModel>();
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            var getClientContract = client.GetClientContractInformation(soap_tokenModel.access_token);
-            // Always close the client.
-            client.Close();
-            if (getClientContract != null)
-            {
-                foreach (var item in getClientContract)
-                {
-                    ShipCaddieAppXml.ClientInformationModel clientContract = new ShipCaddieAppXml.ClientInformationModel();
-                    clientContract.affillateName = item.affillateName;
-                    clientContract.carrierClientContractId = item.carrierClientContractId;
-                    clientContract.carrierName = item.carrierName;
-                    clientContract.nickName = item.nickName;
-                    clientContract.serviceLevels = item.serviceLevels;
-                    lst_ClientContract.Add(clientContract);
-                }
-                return lst_ClientContract;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message";
-                ErrorLabel.Text = "No client contract information is found or may be not available for this account";
-                ErrorLabel.ForeColor = Color.Red;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// To get a list of Service Level
-        /// </summary>
-        /// <param name="CarrierId">Provide a unique CarrierId</param>
-        /// <returns>Returns a Service Level list on the basis of CarrierId</returns>
-        private List<ShipCaddieAppXml.Servicelevel> XMLGetClientContractServiceLevel(int CarrierId)
-        {
-            List<ShipCaddieAppXml.Servicelevel> lst_CIM = new List<ShipCaddieAppXml.Servicelevel>();
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            var getClientContract = client.GetClientContractInformation(soap_tokenModel.access_token);
-            // Always close the client.
-            client.Close();
-            if (getClientContract.Length > 0)
-            {
-                foreach (var item in getClientContract)
-                {
-                    if (item.carrierClientContractId == CarrierId)
-                    {
-                        foreach (var item2 in item.serviceLevels)
-                        {
-                            ShipCaddieAppXml.Servicelevel CIM = new ShipCaddieAppXml.Servicelevel();
-                            CIM.carrierServiceLevelId = item2.carrierServiceLevelId;
-                            CIM.carrierServiceLevelName = item2.carrierServiceLevelName;
-                            CIM.isInternational = item2.isInternational;
-                            CIM.packageWeightLimit = item2.packageWeightLimit;
-                            lst_CIM.Add(CIM);
-                        }
-                    }
-                }
-                return lst_CIM;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message";
-                ErrorLabel.Text = "No Service Level is found.. ";
-                ErrorLabel.ForeColor = Color.Red;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Get the rate of the accessorial charges
-        /// </summary>
-        private void XMLGetRate()
-        {
-            var createShipment = XMLCreateShipmentModel();
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            var getRates = client.GetRate(soap_tokenModel.access_token, createShipment);
-            // Always close the client.
-            client.Close();
-            if (getRates.packages != null)
-            {
-                foreach (var package in getRates.packages)
-                {
-                    dataGridView1.DataSource = package.accessorialCharges.Select(x =>
-                    new AccessorialChargeModel
-                    {
-                        Name = x.name,
-                        ChargeAmount = Convert.ToDecimal(x.chargeAmount),
-                    }).ToList();
-                    lbl_LabelMessage.Text = "Message: ";
-                    ErrorLabel.Text = "Get the rates successfully.";
-                    ErrorLabel.ForeColor = Color.Green;
-                }
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Not retreived any Rates/Rateslist.Ratelist is empty,please check again";
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-        /// <summary>
-        /// Thus method generates a shipment label on the basis of Shipment model which consists different fields
-        /// </summary>
-        private void XMLCreateLabel()
-        {
-            var createShipment = XMLCreateShipmentModel();
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            var getLabel = client.GetLabels(soap_tokenModel.access_token, createShipment);
-            // Always close the client.
-            client.Close();
-            if (getLabel.Length > 0)
-            {
-                foreach (var item in getLabel)
-                {
-                    var label = item.dataBlocks.Select(x => x.dataSourceName).FirstOrDefault();
-                    txtGVoidLabel.Text = item.dataBlocks.Select(x => x.labelKey).FirstOrDefault();
-                    pictureBox1.Image = Base64ToImage(label);
-                }
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Successfully get the Label";
-                ErrorLabel.ForeColor = Color.Green;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Something went wrong,please re-check again.";
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-        /// <summary>
-        /// To void the label
-        /// </summary>
-        /// <param name="labelkey">A unique label key</param>
-        /// <returns>Returns a list of tracking number</returns>
-        public List<ShipCaddieAppXml.VoidLabelModel> XMLVoidLabel(string labelkey)
-        {
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            var getLabel = client.VoidLabel(soap_tokenModel.access_token, labelkey);
-            // Always close the client.
-            client.Close();
-            List<ShipCaddieAppXml.VoidLabelModel> lst_shipApp = new List<ShipCaddieAppXml.VoidLabelModel>();
-            if (getLabel.Length > 0)
-            {
-                foreach (var item in getLabel)
-                {
-                    ShipCaddieAppXml.VoidLabelModel shipApp = new ShipCaddieAppXml.VoidLabelModel();
-                    shipApp.TrackingNumberList = item.TrackingNumberList;
-                    shipApp.ExtensionData = item.ExtensionData;
-                    lst_shipApp.Add(shipApp);
-                }
-                return lst_shipApp;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Label cannot be Void successfully. Response Tracking Number is empty";
-                ErrorLabel.ForeColor = Color.Red;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Refresh the existing token on the basis of passing refresh_token
-        /// </summary>
-        public void XMLRefreshToken()
-        {
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            var _refreshToken = client.RefreshToken(soap_tokenModel.refresh_token);
-            // Always close the client.
-            client.Close();
-            if (_refreshToken.access_token != null)
-            {
-                soap_tokenModel.access_token = _refreshToken.access_token;
-                soap_tokenModel.ExtensionData = _refreshToken.ExtensionData;
-                soap_tokenModel.refresh_token = _refreshToken.refresh_token;
-                soap_tokenModel.refreshExpires = _refreshToken.refreshExpires;
-                soap_tokenModel.refreshIssued = _refreshToken.refreshIssued;
-                soap_tokenModel.token_type = _refreshToken.token_type;
-                soap_tokenModel.tokenExpires = _refreshToken.tokenExpires;
-                soap_tokenModel.tokenIssued = _refreshToken.tokenIssued;
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "SOAP API :Token is successfully refreshed.";
-                ErrorLabel.ForeColor = Color.Green;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Token not refreshed.Something went wrong, please try again";
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-        /// <summary>
-        /// TO add the Shipment
-        /// </summary>
-        public void XMLAddShipment()
-        {
-            var _createXmlShipment = XMLCreateShipmentModel();
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            var _refreshToken = client.AddShipment(soap_tokenModel.access_token, _createXmlShipment);
-            // Always close the client.
-            client.Close();
-            if (_refreshToken.shipmentId > 0)
-            {
-                txtShipId.Text = _refreshToken.shipmentId.ToString();
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Shipment Id get successfully.";
-                lblShipmentId.Text = "Please copy and save the shipment id from above textbox.";
-                ErrorLabel.ForeColor = Color.Green;
-            }
-            else
-            {
-                lbl_LabelMessage.Text = "Message: ";
-                ErrorLabel.Text = "Something happens wrong. Not get any Shipment Id";
-                ErrorLabel.ForeColor = Color.Red;
-            }
-        }
-
-        /// <summary>
-        /// To get the shipment details by passing a unique shipment id
-        /// </summary>
-        /// <param name="_shipmentId">Unique Shipment Id</param>
-        public void XMLGetShipmentInfo(int _shipmentId)
-        {
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            //var getShipInfo=client
-            //     // Always close the client.
-            //client.Close();
-        }
-
-        #endregion
-
-        #region Main Methods to call JSON or XML on basis of selected value from dropdown
-
-        /// <summary>
-        /// Get Token from REST/SOAP API
-        /// </summary>
-        private dynamic callTokenAPI()
-        {
-            Cursor.Current = Cursors.WaitCursor;
-            try
-            {
-                int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
-                if (selectedId == 1) //1 JSON
-                { return GetToken(); }
-                else
-                { return XMLGetToken(); }
-            }
-            catch (Exception ex)
-            {
-                lbl_LabelMessage.Text = "Message";
-                ErrorLabel.Text = ex.Message + ".Please check the all input fields,all fields will be fill correctly.";
-                ErrorLabel.ForeColor = Color.Red;
-                return null;
-            }
-
-        }
-
-        /// <summary>
-        /// Get Carrier contracts details from REST/SOAP API
-        /// </summary>
-        private void callClientContractInformation()
-        {
-            Cursor.Current = Cursors.WaitCursor;
-            try
-            {
-                int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
-                if (selectedId == 1) //1 JSON
-                {
-                    //Empty the Service Level dropdown
-                    List<ShipCaddieApp.Models.ServiceLevelModel> _lstservice = new List<ServiceLevelModel>();
-                    ShipCaddieApp.Models.ServiceLevelModel _service = new ServiceLevelModel();
-                    _service.CarrierServiceLevelName = "--Select--";
-                    _service.CarrierServiceLevelId = 0;
-                    _lstservice.Add(_service);
-                    ddlServiceLabel.DataSource = _lstservice;
-                    ddlServiceLabel.DisplayMember = "CarrierServiceLevelName";
-                    ddlServiceLabel.ValueMember = "CarrierServiceLevelId";
-                    //
-
-                    ddlCarrierName.DisplayMember = "CarrierName";
-                    List<ShipCaddieApp.Models.ClientInformationModel> clientContract = new List<ShipCaddieApp.Models.ClientInformationModel>();
-                    ShipCaddieApp.Models.ClientInformationModel contract = new ShipCaddieApp.Models.ClientInformationModel();
-                    contract.CarrierClientContractId = 0;
-                    contract.CarrierName = "--Select--";
-                    clientContract.Add(contract);
-                    clientContract.AddRange(GetClientContractInformation());// to get a list of carriers
-                    if (clientContract != null)
-                    {
-                        ddlCarrierName.DataSource = clientContract;
-                        ddlCarrierName.DisplayMember = "CarrierName";
-                        ddlCarrierName.ValueMember = "CarrierClientContractId";
-                    }
-                }
-                else
-                {
-                    //Empty the Service Level dropdown
-                    List<ShipCaddieAppXml.Servicelevel> _lstservice = new List<Servicelevel>();
-                    ShipCaddieAppXml.Servicelevel _service = new Servicelevel();
-                    _service.carrierServiceLevelName = "--Select--";
-                    _service.carrierServiceLevelId = 0;
-                    _lstservice.Add(_service);
-                    ddlServiceLabel.DataSource = _lstservice;
-                    ddlServiceLabel.DisplayMember = "carrierServiceLevelName";
-                    ddlServiceLabel.ValueMember = "carrierServiceLevelId";
-                    //
-
-                    ddlCarrierName.DisplayMember = "CarrierName";
-                    List<ShipCaddieAppXml.ClientInformationModel> clientContract = new List<ShipCaddieAppXml.ClientInformationModel>();
-                    ShipCaddieAppXml.ClientInformationModel contract = new ShipCaddieAppXml.ClientInformationModel();
-                    contract.carrierClientContractId = 0;
-                    contract.carrierName = "--Select--";
-                    clientContract.Add(contract);
-                    clientContract.AddRange(XMLGetClientContractInformation());// to get a list of carriers
-                    if (clientContract != null)
-                    {
-                        ddlCarrierName.DataSource = clientContract;
-                        ddlCarrierName.DisplayMember = "carrierName";
-                        ddlCarrierName.ValueMember = "carrierClientContractId";
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                lbl_LabelMessage.Text = "Message";
-                ErrorLabel.Text = ex.Message + ".Please check the all input fields,all fields will be fill correctly.";
-                ErrorLabel.ForeColor = Color.Red;
-                //throw ex;
-            }
-        }
-
-        /// <summary>
-        /// Get Service Level on the basis of selected Carrier from REST/SOAP API
-        /// </summary>
-        /// <param name="carrierID">Unique CarrierID</param>
-        /// <returns>Returns a List of Service level</returns>
-        private dynamic callGetClientContractServiceLevel(int carrierID)
-        {
-            try
-            {
-                int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
-                if (selectedId == 1) //1 JSON
-                { return GetClientContractInformation(carrierID); }
-                else
-                { return XMLGetClientContractServiceLevel(carrierID); }
             }
             catch (Exception ex)
             {
@@ -871,17 +274,53 @@ namespace ShipCaddieApp
         }
 
         /// <summary>
-        /// Get the Rates of different Accessories Charge from REST/SOAP API
+        /// Get rates
         /// </summary>
-        private void callGetRates()
+        /// Method Help Link: http://YourCallbackURL/Help/Api/POST-integration-v1-GetRate
+        private void GetRate()
         {
+            // POST integration/v1/GetRate
             try
             {
                 int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+                RestClient client = new RestClient(Settings.BASE_URL);
+                RestRequest request = new RestRequest("integration/v1/GetRate", Method.POST);
                 if (selectedId == 1) //1 JSON
-                { GetRate(); }
+                {
+                    request.RequestFormat = DataFormat.Json;
+                    request.JsonSerializer.ContentType = "application/json";
+                }
                 else
-                { XMLGetRate(); }
+                {
+                    request.RequestFormat = DataFormat.Xml;
+                    request.XmlSerializer.ContentType = "application/xml";
+                    request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                }
+                request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
+                request.AddBody(CreateShipmentModel());
+                var response = client.Execute<ShipCaddieApp.Models.ShipmentModelIntegration>(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    foreach (var package in response.Data.Packages)
+                    {
+                        dataGridView1.DataSource = package.AccessorialCharges.Select(x =>
+                        new AccessorialChargeModel
+                        {
+                            Name = x.Name,
+                            ChargeAmount = x.ChargeAmount,
+                        }).ToList();
+                        lbl_LabelMessage.Text = "Message: ";
+                        ErrorLabel.Text = "Get the rates successfully.";
+                        ErrorLabel.ForeColor = Color.Green;
+                    }
+                }
+                else
+                {
+                    var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                    lbl_LabelMessage.Text = "Message: ";
+                    ErrorLabel.Text = message.developerMessage;
+                    ErrorLabel.ForeColor = Color.Red;
+                }
             }
             catch (Exception ex)
             {
@@ -889,20 +328,69 @@ namespace ShipCaddieApp
                 ErrorLabel.Text = ex.Message + ".Please check the all input fields,all fields will be fill correctly.";
                 ErrorLabel.ForeColor = Color.Red;
             }
+
         }
 
         /// <summary>
-        /// Get and create a shipment label from REST/SOAP API
+        /// To create and get a Shipment label
         /// </summary>
-        private void callCreateLabels()
+        /// Method Help Link: http://YourCallbackURL/Help/Api/POST-integration-v1-GetLabels
+        private void CreateLabel()
         {
+            //POST integration/v1/GetLabels
             try
             {
                 int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+                RestClient client = new RestClient(Settings.BASE_URL);
+                RestRequest request = new RestRequest("integration/v1/GetLabels", Method.POST);
                 if (selectedId == 1) //1 JSON
-                { CreateLabel(); }
+                {
+                    request.RequestFormat = DataFormat.Json;
+                    request.JsonSerializer.ContentType = "application/json";
+                }
                 else
-                { XMLCreateLabel(); }
+                {
+                    request.RequestFormat = DataFormat.Xml;
+                    request.XmlSerializer.ContentType = "application/xml";
+                    request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                }
+
+                request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
+                request.AddBody(CreateShipmentModel());
+                var response = client.Execute<List<RootObject>>(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    foreach (var item in response.Data)
+                    {
+                        if (item.printJobs != null)
+                        {
+                            txtTrackingBox.Text = item.shipmentId;
+                            foreach (var item2 in item.printJobs)
+                            {
+                                var label = item2.dataBlocks.Select(x => x.data).FirstOrDefault();
+                                txtGVoidLabel.Text = item2.dataBlocks.Select(x => x.labelKey).FirstOrDefault();
+                                pictureBox1.Image = Base64ToImage(label);
+                                lbl_LabelMessage.Text = "Message: ";
+                                ErrorLabel.Text = "Successfully GetLabels";
+                                ErrorLabel.ForeColor = Color.Green;
+                            }
+                        }
+                        else
+                        {
+                            lbl_LabelMessage.Text = "Message";
+                            var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                            ErrorLabel.Text = message.developerMessage;
+                            ErrorLabel.ForeColor = Color.Red;
+                        }
+                    }
+                }
+                else
+                {
+                    lbl_LabelMessage.Text = "Message";
+                    var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                    ErrorLabel.Text = message.developerMessage;
+                    ErrorLabel.ForeColor = Color.Red;
+                }
             }
             catch (Exception ex)
             {
@@ -910,47 +398,122 @@ namespace ShipCaddieApp
                 ErrorLabel.Text = ex.Message + ".Please check the all input fields,all fields will be fill correctly.";
                 ErrorLabel.ForeColor = Color.Red;
             }
+
         }
 
         /// <summary>
-        /// Void the label on the basis of unique label key via REST/SOAP API
+        /// To delete a generated label by passing unique 'labelKey'
         /// </summary>
-        /// <param name="_labelKey">A unique label key get at the time of create label</param>
-        /// <returns>Returns a tracking number list</returns>
-        private void callVoidLabel(string _labelKey)
+        /// Method Help Link: http://YourCallbackURL/Help/Api/POST-integration-v1-VoidLabel_labelKey
+        /// <Return>Returns a keyValue</Return>
+        /// <Return Params>TrackingNumber: The tracking number of the package</Return>
+        public List<ShipCaddieApp.Models.VoidLabelModel> VoidLabel(string labelkey)
         {
+            //POST integration/v1/VoidLabel?labelKey={labelKey}
             try
             {
-                List<CommonVoidModel> lst_CVM = new List<CommonVoidModel>();
+                List<ShipCaddieApp.Models.VoidLabelModel> lst_voidLabel = new List<Models.VoidLabelModel>();
                 int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+
+                RestClient client = new RestClient(Settings.BASE_URL);
+                RestRequest request = new RestRequest("integration/v1/VoidLabel?labelKey={labelKey}", Method.POST);
                 if (selectedId == 1) //1 JSON
-                { VoidLabel(_labelKey); }
+                {
+                    request.RequestFormat = DataFormat.Json;
+                    request.JsonSerializer.ContentType = "application/json";
+                }
                 else
-                { XMLVoidLabel(_labelKey); }
+                {
+                    request.RequestFormat = DataFormat.Xml;
+                    request.XmlSerializer.ContentType = "application/xml";
+                    request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                }
+                request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
+                request.AddParameter("labelKey", labelkey, ParameterType.UrlSegment);
+                var response = client.Execute<List<ShipCaddieApp.Models.VoidLabelModel>>(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    foreach (var item in response.Data)
+                    {
+                        ShipCaddieApp.Models.VoidLabelModel voidLabel = new Models.VoidLabelModel();
+                        voidLabel.TrackingNumber = item.TrackingNumber;
+                        voidLabel.Error = new ApiErrorModel()
+                        {
+                            Message = null,
+                            IsSuccess = true
+                        };
+                        lst_voidLabel.Add(voidLabel);
+                        txtTrackingNo.Text = item.TrackingNumber;
+                        lblTrackingNo.Text = "Please copy and save above Tracking Number";
+                        lbl_LabelMessage.Text = "Message: ";
+                        ErrorLabel.Text = "Successfully get the Tracking number.";
+                        ErrorLabel.ForeColor = Color.Green;
+                    }
+                    return lst_voidLabel;
+                }
+                else
+                {
+                    string message = Convert.ToString(JsonConvert.DeserializeObject<Models.Message>(response.Content));
+                    lbl_LabelMessage.Text = "Message";
+                    ErrorLabel.Text = message;
+                    ErrorLabel.ForeColor = Color.Red;
+                    return null;
+                }
             }
             catch (Exception ex)
             {
                 lbl_LabelMessage.Text = "Message";
                 ErrorLabel.Text = ex.Message + ".Please check the all input fields,all fields will be fill correctly.";
                 ErrorLabel.ForeColor = Color.Red;
-
+                throw ex;
             }
         }
 
         /// <summary>
-        /// Refresh the existing access_token, if user wants via REST/SOAP API method
+        /// Return token based on consumer resfresh token. The token is needed to access all endpoints into this integration package.
         /// </summary>
-        /// <param name="_labelKey">A unique access_token</param>
-        /// <returns>Returns a new token list</returns>
-        private void callRefreshToken()
+        /// Method Help Link: http://YourCallbackURL/Help/Api/GET-integration-v1-RefreshToken_refreshToken
+        /// <Return>Returns a token and refresh token</Return>
+        public void RefreshToken()
         {
+            //GET integration/v1/RefreshToken?refreshToken={refreshToken}
             try
             {
                 int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+                RestClient client = new RestClient(Settings.BASE_URL);
+                RestRequest request = new RestRequest("integration/v1/RefreshToken?refreshToken=" + rest_tokenModel.RefreshToken, Method.GET);
                 if (selectedId == 1)
-                { RefreshToken(); }
+                {
+                    request.RequestFormat = DataFormat.Json;
+                    request.JsonSerializer.ContentType = "application/json";
+                }
                 else
-                { XMLRefreshToken(); }
+                {
+                    request.RequestFormat = DataFormat.Xml;
+                    request.XmlSerializer.ContentType = "application/xml";
+                    request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                }
+                var response = client.Execute<ShipCaddieApp.Models.TokenModel>(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    rest_tokenModel.AccessToken = response.Data.AccessToken;
+                    rest_tokenModel.refreshExpires = response.Data.refreshExpires;
+                    rest_tokenModel.RefreshIssued = response.Data.RefreshIssued;
+                    rest_tokenModel.RefreshToken = response.Data.RefreshToken;
+                    rest_tokenModel.TokenExpires = response.Data.TokenExpires;
+                    rest_tokenModel.TokenIssued = response.Data.TokenIssued;
+                    rest_tokenModel.TokenType = response.Data.TokenType;
+                    lbl_LabelMessage.Text = "Message: ";
+                    ErrorLabel.Text = "Token is refreshed successfully.";
+                    ErrorLabel.ForeColor = Color.Green;
+                }
+                else
+                {
+                    lbl_LabelMessage.Text = "Message";
+                    var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                    ErrorLabel.Text = message.developerMessage;
+                    ErrorLabel.ForeColor = Color.Red;
+                }
             }
             catch (Exception ex)
             {
@@ -961,17 +524,50 @@ namespace ShipCaddieApp
         }
 
         /// <summary>
-        /// To get the shipment Id to call a AddShipment method via REST/SOAP API method
+        /// The object model (ShipmentModel) needs to be set by the endpoint consumer in order to get a Rate and Save the shipment into ShipCaddie
         /// </summary>
-        private void callAddShipment()
+        /// Method Help Link: http://YourCallbackURL/Help/Api/POST-integration-v1-AddShipment
+        /// <Return>The object model (ShipmentModel) needs to be set by the endpoint consumer in order to get a Rate and Save the shipment into ShipCaddieReturns a object of type ShipmentModel with the rate and accessorial charges (when available)</Return>
+        public void AddShipment()
         {
             try
             {
                 int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+                RestClient client = new RestClient(Settings.BASE_URL);
+                RestRequest request = new RestRequest("integration/v1/AddShipment", Method.POST);
+
                 if (selectedId == 1) //JSON
-                { AddShipment(); }
+                {
+                    request.RequestFormat = DataFormat.Json;
+                    request.JsonSerializer.ContentType = "application/json";
+                }
                 else
-                { XMLAddShipment(); }
+                {
+                    request.RequestFormat = DataFormat.Xml;
+                    request.XmlSerializer.ContentType = "application/xml";
+                    request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                }
+                request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
+                request.AddBody(CreateShipmentModel());
+                var response = client.Execute<List<ShipCaddieApp.Models.ShipmentModelIntegration>>(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    foreach (var item in response.Data)
+                    {
+                        txtShipId.Text = item.ShipmentId.ToString();
+                        lbl_LabelMessage.Text = "Message: ";
+                        ErrorLabel.Text = "Get Shipment Id successfully.";
+                        lblShipmentId.Text = "Please copy and save shipment id from above textbox.";
+                        ErrorLabel.ForeColor = Color.Green;
+                    }
+                }
+                else
+                {
+                    lbl_LabelMessage.Text = "Message: ";
+                    var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                    ErrorLabel.Text = message.developerMessage;
+                    ErrorLabel.ForeColor = Color.Red;
+                }
             }
             catch (Exception ex)
             {
@@ -982,18 +578,60 @@ namespace ShipCaddieApp
         }
 
         /// <summary>
-        /// To get the shipment information with label and tracking number via REST/SOAP API method
+        /// TO get the shipment details
         /// </summary>
-        /// <param name="_shipmentid">A unique shipment id</param>
-        private void callGetShipmentInfo(int _shipmentid)
+        /// Method Help Link: https://YourCallbackURL/Help/Api/GET-integration-v1-GetShipmentInfo_shipmentId
+        /// <param name="_shipmentId">A unique shipment id</param>
+        public void GetShipmentInfo(int _shipmentId)
         {
+            //GET integration/v1/GetShipmentInfo?shipmentId={shipmentId}
             try
             {
                 int selectedId = Convert.ToInt16(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value);
+                RestClient client = new RestClient(Settings.BASE_URL);
+                RestRequest request = new RestRequest("integration/v1/GetShipmentInfo?shipmentId={shipmentId}", Method.GET);
                 if (selectedId == 1) //JSON
-                { GetShipmentInfo(_shipmentid); }
+                {
+                    request.RequestFormat = DataFormat.Json;
+                    request.JsonSerializer.ContentType = "application/json";
+                }
                 else
-                { XMLGetShipmentInfo(_shipmentid); }
+                {
+                    request.RequestFormat = DataFormat.Xml;
+                    request.XmlSerializer.ContentType = "application/xml";
+                    request.AddHeader("Accept", "application/xml,text/plain,*/*");
+                }
+                request.AddHeader("Authorization", string.Format("Bearer {0}", rest_tokenModel.AccessToken));
+                request.AddParameter("shipmentId", _shipmentId, ParameterType.UrlSegment);
+                var response = client.Execute<List<ShipCaddieApp.Models.ShipmentInfoModel.RootObject>>(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    foreach (var item in response.Data)
+                    {
+                        if (item.labelList != null)
+                        {
+                            foreach (var item2 in item.labelList)
+                            {
+                                pictureBox2.Image = Base64ToImage(item2.labelData);
+                                txtTrack.Text = item2.trackingNumber; //Get tracking number after call GetShipmentInfo method
+                                lbl2TrackNo.Text = "Please save Tracking Number for future reference.";
+                            }
+                        }
+                        else
+                        {
+                            lbl_LabelMessage.Text = "Message: ";
+                            ErrorLabel.Text = "Not retreived any data related to shipment id. Please contact to app administartor.";
+                            ErrorLabel.ForeColor = Color.Red;
+                        }
+                    }
+                }
+                else
+                {
+                    lbl_LabelMessage.Text = "Message: ";
+                    var message = JsonConvert.DeserializeObject<Models.Message>(response.Content);
+                    ErrorLabel.Text = message.developerMessage;
+                    ErrorLabel.ForeColor = Color.Red;
+                }
             }
             catch (Exception ex)
             {
@@ -1028,9 +666,12 @@ namespace ShipCaddieApp
             {
                 Settings.USER = _usrName;
                 Settings.USER_PWD = _usrPwd;
-                callTokenAPI();
-                IsEnabledControls(true);
-                callClientContractInformation();
+                var getResposne = GetToken();
+                if (getResposne != null)
+                {
+                    IsEnabledControls(true);
+                    callClientContractInformation();
+                }
             }
         }
         #endregion
@@ -1063,8 +704,8 @@ namespace ShipCaddieApp
         {
             Cursor.Current = Cursors.WaitCursor;
             List<SelectedTypeModel> item = new List<SelectedTypeModel>();
-            item.Add(new SelectedTypeModel { Text = "JSON (REST API)", Value = "1" });
-            item.Add(new SelectedTypeModel { Text = "XML (SOAP API)", Value = "2" });
+            item.Add(new SelectedTypeModel { Text = "JSON Request", Value = "1" });
+            item.Add(new SelectedTypeModel { Text = "XML Request", Value = "2" });
             ddlSwitchAPI.DataSource = item;
             ddlSwitchAPI.SelectedIndex = 0;
             var selectedId = ((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value;
@@ -1189,132 +830,6 @@ namespace ShipCaddieApp
         }
         #endregion
 
-        /// <summary>
-        /// To Get a Shipment related details to pass in ShipCaddie SOAP API methods where ever it is required..
-        /// </summary>
-        /// <returns>A Shipment model</returns>
-        #region SOAP API Request Shipment Model
-        private ShipCaddieAppXml.ShipmentModelIntegration XMLCreateShipmentModel()
-        {
-            ShipCaddieAppXml.ShipmentModelIntegration shipmentModel = new ShipCaddieAppXml.ShipmentModelIntegration();
-
-            ShipCaddieAppXml.Carrier[] carriers = new ShipCaddieAppXml.Carrier[1];
-            ShipCaddieAppXml.Carrier carrier = new ShipCaddieAppXml.Carrier();
-            carrier.carrierServiceLevelId = _carrierServiceLevelId;
-            carrier.carrierClientContractId = _carrierClientContractId;
-            carriers[0] = carrier;
-
-            shipmentModel.carriers = carriers;
-
-            shipmentModel.addressFrom = new ShipCaddieAppXml.Addressfrom()
-            {
-                attentionOf = addressFrom.CustomerId,
-                companyName = addressFrom.Organization,
-                address1 = addressFrom.Address1,
-                address2 = addressFrom.Address2,
-                city = addressFrom.City,
-                state = addressFrom.State,
-                zipCode = addressFrom.Zip,
-                countryCode = addressFrom.Alfa2Code,
-                systemCountryId = addressFrom.CountryId,
-                email = addressFrom.Email,
-                phoneNumber = addressFrom.Phone,
-                isResidential = addressFrom.IsResident
-            };
-
-            shipmentModel.addressTo = new ShipCaddieAppXml.Addressto()
-            {
-                attentionOf = addressTo.CustomerId,
-                companyName = addressTo.Organization,
-                address1 = addressTo.Address1,
-                address2 = addressTo.Address2,
-                city = addressTo.City,
-                state = addressTo.State,
-                zipCode = addressTo.Zip,
-                countryCode = addressTo.Alfa2Code,
-                systemCountryId = addressTo.CountryId,
-                email = addressTo.Email,
-                phoneNumber = addressTo.Phone,
-                isResidential = addressTo.IsResident
-            };
-
-            ShipCaddieAppXml.Package package = new ShipCaddieAppXml.Package()
-            {
-                dimension = new ShipCaddieAppXml.Dimension()
-                {
-                    height = Convert.ToInt32(txtHeight.Text), //4
-                    length = Convert.ToInt32(txtLength.Text), //5
-                    width = Convert.ToInt32(txtWidth.Text) //3
-                },
-                weightOunces = float.Parse(txtOz.Text),
-                weightPounds = float.Parse(txtlbs.Text)
-            };
-
-            package.accessorialCharges = new Accessorialcharge[3];
-
-            ShipCaddieAppXml.Accessorialcharge acc1 = new Accessorialcharge()
-            {
-                name = chkInsurance.Text,
-                inputs = new List<ShipCaddieAppXml.Input>().ToArray()
-            };
-
-            if (chkInsurance.Checked)
-            {
-                package.accessorialCharges[0] = getArrayInputs("AMOUNT", txtChargeAmount.Text);//AMOUNT
-            }
-
-            ShipCaddieAppXml.Accessorialcharge acc2 = new Accessorialcharge()
-            {
-                name = chkCOD.Text,
-                inputs = new List<ShipCaddieAppXml.Input>().ToArray()
-            };
-
-            if (chkCOD.Checked)
-            {
-                package.accessorialCharges[1] = getArrayInputs("TYPE", ddlCOD.Text);//TYPE
-            }
-
-            ShipCaddieAppXml.Accessorialcharge acc3 = new Accessorialcharge()
-            {
-                name = chkSign.Text, //"SIGNATURE",
-                inputs = new List<ShipCaddieAppXml.Input>().ToArray()
-            };
-
-            if (chkSign.Checked)
-            {
-                package.accessorialCharges[2] = getArrayInputs("TYPE", ddlSign.Text); //"SIGNATURE_ADULT"
-            }
-
-            shipmentModel.printFormat = lblPrintFormat.Text; //"PNG_4x6";
-
-            ShipCaddieAppXml.Item objInvent = new Item();
-            objInvent.sku = "SKU-DARIO-III";
-            objInvent.description = "Integration Item 3";
-            objInvent.price = 2;
-            objInvent.quantity = 2;
-            objInvent.weightOunces = 0;
-            objInvent.weightPounds = 2;
-            objInvent.name = "Integration Item 3";
-            package.items = new Item[1];
-            package.items[0] = objInvent;
-            shipmentModel.packages = new Package[1];
-            shipmentModel.packages[0] = package;
-            return shipmentModel;
-        }
-        private static Accessorialcharge getArrayInputs(string name, dynamic value)
-        {
-
-            Accessorialcharge accessorialcharge = new Accessorialcharge();
-            ShipCaddieAppXml.Input[] inputs = new ShipCaddieAppXml.Input[1];
-            ShipCaddieAppXml.Input input = new ShipCaddieAppXml.Input();
-            input.name = name;
-            input.value = value;
-            inputs[0] = input;
-            accessorialcharge.inputs = inputs;
-            return accessorialcharge;
-        }
-        #endregion
-
         #endregion
 
         #region To Enable/Disable controls
@@ -1347,17 +862,17 @@ namespace ShipCaddieApp
             {
                 ErrorLabel.Text = "";
                 lblShipmentId.Text = "";
-                var _service = Convert.ToInt32(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value) as int?;
-                if (_service != null)
-                {
-                    var getResposne = callTokenAPI();
-                    if (getResposne != null)
-                    {
-                        callClientContractInformation();
-                    }
-                }
-                Utilities.ResetAllControls(this);
-                FormInputPlaceholder();
+                //var _service = Convert.ToInt32(((SelectedTypeModel)ddlSwitchAPI.SelectedItem).Value) as int?;
+                //if (_service != null)
+                //{
+                //    var getResposne = GetToken();
+                //    if (getResposne != null)
+                //    {
+                //        callClientContractInformation();
+                //    }
+                //}
+                //Utilities.ResetAllControls(this);
+                //FormInputPlaceholder();
             }
         }
         #endregion
@@ -1476,29 +991,53 @@ namespace ShipCaddieApp
         private void ddlCarrierName_SelectedIndexChanged(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
-            try
+            var _carrier = ddlCarrierName.SelectedValue as int?;
+            if (_carrier > 0)
             {
-                var _carrier = ddlCarrierName.SelectedValue as int?;
-                if (_carrier > 0)
+                int selectedValueId = Convert.ToInt32(ddlCarrierName.SelectedValue);
+                _carrierClientContractId = selectedValueId;
+                var serviceLevels = GetClientContractInformation(selectedValueId);
+                if (serviceLevels != null)
                 {
-                    int selectedValueId = Convert.ToInt32(ddlCarrierName.SelectedValue);
-                    _carrierClientContractId = selectedValueId;
-                    var serviceLevels = callGetClientContractServiceLevel(selectedValueId);
-                    if (serviceLevels != null)
-                    {
-                        ddlServiceLabel.DataSource = serviceLevels;
-                        ddlServiceLabel.DisplayMember = "CarrierServiceLevelName";
-                        ddlServiceLabel.ValueMember = "CarrierServiceLevelId";
-                    }
+                    ddlServiceLabel.DataSource = serviceLevels;
+                    ddlServiceLabel.DisplayMember = "CarrierServiceLevelName";
+                    ddlServiceLabel.ValueMember = "CarrierServiceLevelId";
                 }
             }
-            catch (Exception ex)
+        }
+
+        /// <summary>
+        /// Get Carrier contracts details from REST/SOAP API
+        /// </summary>
+        private void callClientContractInformation()
+        {
+
+            //Empty the Service Level dropdown
+            List<ShipCaddieApp.Models.ServiceLevelModel> _lstservice = new List<ServiceLevelModel>();
+            ShipCaddieApp.Models.ServiceLevelModel _service = new ServiceLevelModel();
+            _service.CarrierServiceLevelName = "--Select--";
+            _service.CarrierServiceLevelId = 0;
+            _lstservice.Add(_service);
+            ddlServiceLabel.DataSource = _lstservice;
+            ddlServiceLabel.DisplayMember = "CarrierServiceLevelName";
+            ddlServiceLabel.ValueMember = "CarrierServiceLevelId";
+            //
+
+            ddlCarrierName.DisplayMember = "CarrierName";
+            List<ShipCaddieApp.Models.ClientInformationModel> clientContract = new List<ShipCaddieApp.Models.ClientInformationModel>();
+            ShipCaddieApp.Models.ClientInformationModel contract = new ShipCaddieApp.Models.ClientInformationModel();
+            contract.CarrierClientContractId = 0;
+            contract.CarrierName = "--Select--";
+            clientContract.Add(contract);
+            clientContract.AddRange(GetClientContractInformation());// to get a list of carriers
+            if (clientContract != null)
             {
-                lbl_LabelMessage.Text = "Message";
-                ErrorLabel.Text = ex.Message;
-                ErrorLabel.ForeColor = Color.Red;
+                ddlCarrierName.DataSource = clientContract;
+                ddlCarrierName.DisplayMember = "CarrierName";
+                ddlCarrierName.ValueMember = "CarrierClientContractId";
             }
         }
+
         private void ddlServiceLabel_SelectedIndexChanged(object sender, EventArgs e)
         {
             Cursor.Current = Cursors.WaitCursor;
@@ -1522,7 +1061,7 @@ namespace ShipCaddieApp
         {
             EmptyHeaderMsg();
             Cursor.Current = Cursors.WaitCursor;
-            callGetRates();
+            GetRate();
         }
 
         #endregion
@@ -1538,7 +1077,7 @@ namespace ShipCaddieApp
         {
             EmptyHeaderMsg();
             Cursor.Current = Cursors.WaitCursor;
-            callCreateLabels();
+            CreateLabel();
         }
         #endregion
 
@@ -1547,7 +1086,7 @@ namespace ShipCaddieApp
         {
             EmptyHeaderMsg();
             Cursor.Current = Cursors.WaitCursor;
-            callAddShipment();
+            AddShipment();
         }
         #endregion
 
@@ -1630,7 +1169,7 @@ namespace ShipCaddieApp
             Cursor.Current = Cursors.WaitCursor;
             var uLabelKey = txtGVoidLabel.Text;
             //var succType = VoidLabel(q);
-            callVoidLabel(uLabelKey);
+            VoidLabel(uLabelKey);
         }
 
         #endregion
@@ -1641,7 +1180,7 @@ namespace ShipCaddieApp
         {
             EmptyHeaderMsg();
             Cursor.Current = Cursors.WaitCursor;
-            callGetShipmentInfo(Convert.ToInt32(txtTrackingBox.Text));
+            GetShipmentInfo(Convert.ToInt32(txtTrackingBox.Text));
         }
 
         #endregion
@@ -1651,11 +1190,15 @@ namespace ShipCaddieApp
         {
             EmptyHeaderMsg();
             Cursor.Current = Cursors.WaitCursor;
-            callRefreshToken();
+            RefreshToken();
         }
         #endregion
 
-        #endregion
+        private void tabShipInfo_Click(object sender, EventArgs e)
+        {
 
+        }
+
+        #endregion
     }
 }

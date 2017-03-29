@@ -43,31 +43,14 @@ namespace ShipCaddieApp
         #region Main calling API method on the basis of selected value from format(JSON or SOAP) dropdown
         private void callBindCountryforCode()
         {
-            Cursor.Current = Cursors.WaitCursor;
-            int _formatId = Main._formatTypeId;
-            if (_formatId == 1) // Id:1 - JSON
+            var countryData = bindCountryforCode(); //Bind the country
+            if (countryData != null)
             {
-                var countryData = bindCountryforCode(); //Bind the country
-                if (countryData != null)
-                {
-                    ddlAddCountry.DataSource = countryData;
-                    var USA = countryData.Where(x => x.CountryId == 840).FirstOrDefault();
-                    ddlAddCountry.DisplayMember = "CountryName";
-                    ddlAddCountry.ValueMember = "CountryId";
-                    ddlAddCountry.SelectedItem = USA;
-                }
-            }
-            else
-            {
-                var XMLCountryData = XMLbindCountryforCode(); //Bind the country
-                if (XMLCountryData != null)
-                {
-                    ddlAddCountry.DataSource = XMLCountryData;
-                    var USA = XMLCountryData.Where(x => x.countryId == 840).FirstOrDefault();
-                    ddlAddCountry.DisplayMember = "countryName";
-                    ddlAddCountry.ValueMember = "countryId";
-                    ddlAddCountry.SelectedItem = USA;
-                }
+                ddlAddCountry.DataSource = countryData;
+                var USA = countryData.Where(x => x.CountryId == 840).FirstOrDefault();
+                ddlAddCountry.DisplayMember = "CountryName";
+                ddlAddCountry.ValueMember = "CountryId";
+                ddlAddCountry.SelectedItem = USA;
             }
         }
         #endregion
@@ -80,12 +63,22 @@ namespace ShipCaddieApp
         private List<Models.SystemCountryModel> bindCountryforCode()
         {
             // GET integration/v1/GetCountrySystemInformation
+            Cursor.Current = Cursors.WaitCursor;
+            int _formatId = Main._formatTypeId;
             RestClient client = new RestClient(Settings.BASE_URL);
             RestRequest request = new RestRequest("integration/v1/GetCountrySystemInformation", Method.GET);
-            request.RequestFormat = DataFormat.Json;
-            request.JsonSerializer.ContentType = "application/json";
+            if (_formatId == 1) // Id:1 - JSON
+            {
+                request.RequestFormat = DataFormat.Json;
+                request.JsonSerializer.ContentType = "application/json";
+            }
+            else
+            {
+                request.RequestFormat = DataFormat.Xml;
+                request.XmlSerializer.ContentType = "application/xml";
+                request.AddHeader("Accept", "application/xml,text/plain,*/*");
+            }
             request.AddHeader("Authorization", string.Format("Bearer {0}", _Rest_Access_Token));
-
             var response = client.Execute<List<Models.SystemCountryModel>>(request);
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -96,37 +89,6 @@ namespace ShipCaddieApp
                     CM.CountryId = item.CountryId;
                     CM.Alpha2CodeName = item.Alpha2CodeName;
                     CM.CountryName = item.CountryName;
-                    lst_CM.Add(CM);
-                }
-                return lst_CM;
-            }
-            else
-            {
-                return null;
-            }
-        }
-        #endregion
-
-        #region SOAP API Method
-        /// <summary>
-        /// To bind the XML country list by hitting the ShipCaddie API and bind in a dropdown
-        /// </summary>
-        /// <returns>Returns a list of countries name</returns>
-        private List<ShipCaddieAppXml.SystemCountryModel> XMLbindCountryforCode()
-        {
-            ShipCaddieAPIClient client = new ShipCaddieAPIClient();
-            var getCountry = client.GetCountrySystemInformation(_SOAP_Access_Token);
-            // Always close the client.
-            client.Close();
-            if (getCountry.Length > 0)
-            {
-                List<ShipCaddieAppXml.SystemCountryModel> lst_CM = new List<ShipCaddieAppXml.SystemCountryModel>();
-                foreach (var item in getCountry)
-                {
-                    ShipCaddieAppXml.SystemCountryModel CM = new ShipCaddieAppXml.SystemCountryModel();
-                    CM.countryId = item.countryId;
-                    CM.alpha2CodeName = item.alpha2CodeName;
-                    CM.countryName = item.countryName;
                     lst_CM.Add(CM);
                 }
                 return lst_CM;
